@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Job Application Agent</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --purple: #534AB7;
+      --purple-light: #EEEDFE;
+      --purple-mid: #AFA9EC;
+      --purple-dark: #3C3489;
+      --green: #27500A;
+      --green-light: #EAF3DE;
+      --green-mid: #97C459;
+      --amber-light: #FAEEDA;
+      --amber-dark: #633806;
+      --red-light: #FCEBEB;
+      --red-dark: #791F1F;
+      --red-mid: #F09595;
+      --bg: #ffffff;
+      --bg2: #f7f7f5;
+      --border: rgba(0,0,0,0.12);
+      --text: #1a1a1a;
+      --text2: #666;
+      --text3: #999;
+      --radius: 8px;
+      --radius-lg: 12px;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg2); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
+    .app { max-width: 720px; margin: 0 auto; }
+    h1 { font-size: 22px; font-weight: 500; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    h1 i { color: var(--purple); font-size: 22px; }
+    .subtitle { font-size: 14px; color: var(--text2); margin-bottom: 2rem; }
+    .phase-badge { font-size: 12px; background: var(--green-light); color: var(--green); padding: 2px 10px; border-radius: 20px; font-weight: 400; margin-left: 8px; }
+    .pipeline { display: flex; align-items: center; gap: 6px; margin-bottom: 2rem; flex-wrap: wrap; }
+    .step { display: flex; align-items: center; gap: 5px; font-size: 12px; padding: 4px 10px; border-radius: 20px; border: 0.5px solid var(--border); color: var(--text2); background: var(--bg2); transition: all 0.3s; }
+    .step.active { background: var(--purple-light); border-color: var(--purple-mid); color: var(--purple-dark); }
+    .step.done { background: var(--green-light); border-color: var(--green-mid); color: var(--green); }
+    .arrow { color: var(--text3); font-size: 12px; }
+    .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+    .card-label { font-size: 11px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .field label { font-size: 12px; color: var(--text2); display: block; margin-bottom: 4px; }
+    input[type=text], textarea { width: 100%; border: 0.5px solid var(--border); border-radius: var(--radius); padding: 9px 12px; font-size: 14px; font-family: inherit; color: var(--text); background: var(--bg); outline: none; transition: border-color 0.2s; }
+    input[type=text]:focus, textarea:focus { border-color: var(--purple); }
+    textarea { resize: vertical; min-height: 130px; line-height: 1.6; }
+    .actions { display: flex; gap: 10px; align-items: center; margin-bottom: 1.5rem; }
+    .btn-primary { background: var(--purple); color: #fff; border: none; border-radius: var(--radius); padding: 10px 22px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 7px; transition: background 0.2s; }
+    .btn-primary:hover { background: var(--purple-dark); }
+    .btn-primary:disabled { background: var(--purple-mid); cursor: not-allowed; }
+    .btn-ghost { background: transparent; color: var(--text2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 18px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+    .btn-ghost:hover { background: var(--bg2); }
+    .mcp-chips { display: flex; gap: 7px; flex-wrap: wrap; margin-left: auto; }
+    .chip { display: flex; align-items: center; gap: 5px; font-size: 11px; padding: 4px 10px; border-radius: 20px; border: 0.5px solid var(--border); color: var(--text2); }
+    .chip.live { border-color: var(--green-mid); background: var(--green-light); color: var(--green); }
+    .chip.soon { opacity: 0.4; border-style: dashed; }
+    .insight-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1rem; }
+    .insight-card { background: var(--bg2); border-radius: var(--radius); padding: 12px; }
+    .insight-card .label { font-size: 11px; color: var(--text2); margin-bottom: 5px; }
+    .insight-card .value { font-size: 14px; font-weight: 500; }
+    .output-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1rem; }
+    .output-header { display: flex; align-items: center; justify-content: space-between; padding: 11px 1.25rem; border-bottom: 0.5px solid var(--border); background: var(--bg2); }
+    .output-header-left { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; }
+    .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+    .badge-purple { background: var(--purple-light); color: var(--purple-dark); }
+    .badge-green { background: var(--green-light); color: var(--green); }
+    .output-body { padding: 1.25rem; font-size: 14px; line-height: 1.7; white-space: pre-wrap; }
+    .copy-btn { background: transparent; border: 0.5px solid var(--border); border-radius: var(--radius); padding: 4px 10px; font-size: 12px; cursor: pointer; color: var(--text2); display: flex; align-items: center; gap: 4px; }
+    .copy-btn:hover { background: var(--bg2); }
+    .error-box { background: var(--red-light); border: 0.5px solid var(--red-mid); border-radius: var(--radius); padding: 10px 14px; font-size: 13px; color: var(--red-dark); margin-bottom: 1rem; }
+    .success-box { background: var(--green-light); border: 0.5px solid var(--green-mid); border-radius: var(--radius); padding: 12px 14px; font-size: 13px; color: var(--green); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+    .success-box a { color: var(--purple); font-weight: 500; }
+    .loading { text-align: center; padding: 2.5rem 0; display: none; }
+    .dots { display: inline-flex; gap: 5px; margin-bottom: 12px; }
+    .dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--purple); animation: bounce 1.2s infinite; }
+    .dots span:nth-child(2) { animation-delay: 0.2s; }
+    .dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+    .log-text { font-family: 'Courier New', monospace; font-size: 12px; color: var(--text2); line-height: 1.8; }
+    a.notion-link { color: var(--purple); text-decoration: none; font-weight: 500; }
+    a.notion-link:hover { text-decoration: underline; }
+    @media(max-width:600px) { .row { grid-template-columns: 1fr; } .insight-grid { grid-template-columns: 1fr 1fr; } .mcp-chips { margin-left: 0; margin-top: 8px; } .actions { flex-wrap: wrap; } }
+  </style>
+</head>
+<body>
+<div class="app">
+  <h1><i class="ti ti-robot"></i> Job Application Agent <span class="phase-badge">Phase 2 — Notion live</span></h1>
+  <p class="subtitle">Paste a job → AI researches, writes your cover letter, and saves it to Notion automatically</p>
+
+  <div class="pipeline">
+    <div class="step" id="s0"><i class="ti ti-file-text"></i> Input</div>
+    <span class="arrow">→</span>
+    <div class="step" id="s1"><i class="ti ti-search"></i> Research</div>
+    <span class="arrow">→</span>
+    <div class="step" id="s2"><i class="ti ti-writing"></i> Cover letter</div>
+    <span class="arrow">→</span>
+    <div class="step" id="s3"><i class="ti ti-database"></i> Save to Notion</div>
+    <span class="arrow">→</span>
+    <div class="step" id="s4"><i class="ti ti-mail"></i> Gmail</div>
+    <span class="arrow">→</span>
+    <div class="step" id="s5"><i class="ti ti-brand-slack"></i> Slack</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Job details</div>
+    <div class="row">
+      <div class="field"><label>Company</label><input type="text" id="company" placeholder="e.g. Razorpay, Google, Zepto"/></div>
+      <div class="field"><label>Role</label><input type="text" id="role" placeholder="e.g. SDE-2, AI Engineer"/></div>
+    </div>
+    <div class="field"><label>Job description</label><textarea id="jd" placeholder="Paste the full job description here..."></textarea></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-primary" id="runBtn" onclick="runAgent()"><i class="ti ti-player-play"></i> Run agent</button>
+    <button class="btn-ghost" onclick="clearAll()">Clear</button>
+    <div class="mcp-chips">
+      <div class="chip live"><i class="ti ti-database" style="font-size:12px"></i> Notion</div>
+      <div class="chip soon"><i class="ti ti-mail" style="font-size:12px"></i> Gmail</div>
+      <div class="chip soon"><i class="ti ti-brand-slack" style="font-size:12px"></i> Slack</div>
+    </div>
+  </div>
+
+  <div id="errorBox" class="error-box" style="display:none"></div>
+  <div id="successBox" class="success-box" style="display:none">
+    <i class="ti ti-circle-check" style="font-size:18px"></i>
+    <span id="successMsg"></span>
+  </div>
+
+  <div id="outputSection" style="display:none">
+    <div class="insight-grid" id="insightGrid"></div>
+
+    <div class="output-card" id="researchCard" style="display:none">
+      <div class="output-header">
+        <div class="output-header-left"><i class="ti ti-search" style="color:#534AB7"></i> Company & role research <span class="badge badge-purple">AI</span></div>
+        <button class="copy-btn" onclick="copyText('researchBody')"><i class="ti ti-copy" style="font-size:13px"></i> Copy</button>
+      </div>
+      <div class="output-body" id="researchBody"></div>
+    </div>
+
+    <div class="output-card" id="coverCard" style="display:none">
+      <div class="output-header">
+        <div class="output-header-left"><i class="ti ti-writing" style="color:#534AB7"></i> Cover letter <span class="badge badge-green">Ready</span></div>
+        <button class="copy-btn" onclick="copyText('coverBody')"><i class="ti ti-copy" style="font-size:13px"></i> Copy</button>
+      </div>
+      <div class="output-body" id="coverBody"></div>
+    </div>
+
+    <div class="output-card" id="notionCard" style="display:none">
+      <div class="output-header">
+        <div class="output-header-left"><i class="ti ti-database" style="color:#27500A"></i> Saved to Notion <span class="badge badge-green">Done</span></div>
+        <a id="notionLink" href="#" target="_blank" class="copy-btn" style="text-decoration:none"><i class="ti ti-external-link" style="font-size:13px"></i> Open in Notion</a>
+      </div>
+      <div class="output-body" id="notionLog"></div>
+    </div>
+  </div>
+
+  <div class="loading" id="loadingSection">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <div style="font-size:14px;color:#666" id="loadingMsg">Analyzing...</div>
+  </div>
+</div>
+
+<script>
+const CLAUDE_API = 'https://api.anthropic.com/v1/messages';
+const PROXY = 'http://localhost:3001';
+
+const RESUME = `Arpita Oberoi — B.Tech ECE with IoT, NSUT 2026, CGPA 7.52.
+Experience:
+- React Developer Intern, Let's Try (Shark Tank startup, Jun–Aug 2025): Built payment/cart modules with React, Node, Express + Zaakpay Gateway for 500+ users; Google Maps API integration; reduced API latency 20%.
+- Backend AI ML Developer Intern, Olbrain (Jan–Jun 2026): Designed end-to-end agentic AI workflows; built React/Next.js + Python/FastAPI on GCP Firestore; webhook triggers and REST APIs for multi-step agent pipelines; automated reporting via Google Cloud Scheduler.
+- Research Consultant, WorldQuant (May 2025): Built 40+ financial model alphas using FEL; improved forecast accuracy 15%.
+Projects: Real-time Collaborative Code Editor (React, Node, WebSockets), Team Building App (Next.js, Liveblocks, 50+ users), Crypto Tracker (React, 200+ coins, 40% faster queries).
+Skills: Python, SQL, JavaScript, React, Node, Redux, Tailwind, FastAPI, GCP, NumPy, Pandas.
+Achievement: Qualified Stage 2 International Quant Championship, WorldQuant BRAIN 2025.`;
+
+const steps = ['s0','s1','s2','s3','s4','s5'];
+function setStep(n) {
+  steps.forEach((id,i) => {
+    document.getElementById(id).className = 'step' + (i < n ? ' done' : i === n ? ' active' : '');
+  });
+}
+function setLoading(msg) { document.getElementById('loadingSection').style.display = 'block'; document.getElementById('loadingMsg').textContent = msg; }
+function hideLoading() { document.getElementById('loadingSection').style.display = 'none'; }
+function showError(msg) { const el = document.getElementById('errorBox'); el.textContent = msg; el.style.display = 'block'; }
+function copyText(id) { navigator.clipboard.writeText(document.getElementById(id).textContent); }
+function clearAll() {
+  ['jd','company','role'].forEach(id => document.getElementById(id).value = '');
+  ['outputSection','errorBox','successBox','loadingSection'].forEach(id => document.getElementById(id).style.display = 'none');
+  steps.forEach(id => document.getElementById(id).className = 'step');
+}
+
+async function callClaude(system, user) {
+  const res = await fetch(CLAUDE_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1000, system, messages: [{ role: 'user', content: user }] })
+  });
+  if (!res.ok) throw new Error('Claude API error ' + res.status);
+  const data = await res.json();
+  return data.content.map(b => b.text || '').join('');
+}
+
+async function runAgent() {
+  const jd = document.getElementById('jd').value.trim();
+  const company = document.getElementById('company').value.trim();
+  const role = document.getElementById('role').value.trim();
+  if (!jd || !company || !role) { showError('Please fill in company, role, and job description.'); return; }
+
+  document.getElementById('errorBox').style.display = 'none';
+  document.getElementById('successBox').style.display = 'none';
+  document.getElementById('outputSection').style.display = 'none';
+  document.getElementById('runBtn').disabled = true;
+
+  try {
+    setStep(0); setLoading('Reading job description...');
+    await new Promise(r => setTimeout(r, 300));
+
+    setStep(1); setLoading('Researching company and role fit...');
+    const research = await callClaude(
+      `You are a career research agent. Given a job description and candidate resume, produce a concise research brief (max 200 words) with bullet points covering: (1) what this company likely values, (2) top 3 skills to emphasize, (3) one unique angle the candidate has. Candidate resume: ${RESUME}`,
+      `Company: ${company}\nRole: ${role}\nJD: ${jd}`
+    );
+
+    setStep(2); setLoading('Writing tailored cover letter...');
+    const coverLetter = await callClaude(
+      `You are an expert career coach writing cover letters for Arpita Oberoi. Write a professional, personalized cover letter (250-300 words) with a strong specific hook, concrete achievements with numbers, and a confident close. Sound human, not templated. Resume: ${RESUME}`,
+      `Role: ${role} at ${company}\nJD: ${jd}\nResearch: ${research}`
+    );
+
+    setLoading('Scoring match...');
+    const insightsRaw = await callClaude(
+      'Return ONLY valid JSON, no markdown. Format: {"match_score":"X/10","top_skill":"one skill","interview_tip":"one sentence under 12 words"}',
+      `Role: ${role} at ${company}\nJD: ${jd}\nResume: ${RESUME}`
+    );
+    let insights = { match_score: '8/10', top_skill: 'AI/ML', interview_tip: 'Lead with your Olbrain agentic workflow experience.' };
+    try { insights = JSON.parse(insightsRaw.replace(/```json|```/g,'').trim()); } catch(e) {}
+
+    document.getElementById('insightGrid').innerHTML = `
+      <div class="insight-card"><div class="label">Match score</div><div class="value" style="color:#534AB7">${insights.match_score}</div></div>
+      <div class="insight-card"><div class="label">Top skill to highlight</div><div class="value">${insights.top_skill}</div></div>
+      <div class="insight-card"><div class="label">Interview tip</div><div class="value" style="font-size:12px;line-height:1.5">${insights.interview_tip}</div></div>
+    `;
+
+    document.getElementById('researchBody').textContent = research;
+    document.getElementById('coverBody').textContent = coverLetter;
+    document.getElementById('researchCard').style.display = 'block';
+    document.getElementById('coverCard').style.display = 'block';
+
+    setStep(3); setLoading('Saving to Notion...');
+    let notionResult = null;
+    try {
+      const nr = await fetch(`${PROXY}/save-application`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company, role, matchScore: insights.match_score, coverLetter })
+      });
+      notionResult = await nr.json();
+    } catch(e) {
+      console.warn('Notion proxy error:', e.message);
+    }
+
+    if (notionResult && notionResult.success) {
+      document.getElementById('notionLog').innerHTML = `<span class="log-text">✓ Page created\n✓ Company: ${company}\n✓ Role: ${role}\n✓ Status: Researching\n✓ Match score: ${insights.match_score}\n✓ Cover letter saved\n✓ Date: ${new Date().toLocaleDateString()}</span>`;
+      document.getElementById('notionLink').href = notionResult.url || 'https://notion.so';
+      document.getElementById('notionCard').style.display = 'block';
+      document.getElementById('successBox').style.display = 'flex';
+      document.getElementById('successMsg').innerHTML = `Saved to Notion! <a href="${notionResult.url}" target="_blank" class="notion-link" style="margin-left:6px">Open entry →</a>`;
+      setStep(5);
+    } else {
+      document.getElementById('notionLog').textContent = 'Make sure your proxy server is running: node server.js';
+      document.getElementById('notionCard').style.display = 'block';
+      setStep(4);
+    }
+
+    hideLoading();
+    document.getElementById('outputSection').style.display = 'block';
+
+  } catch(err) {
+    hideLoading();
+    steps.forEach(id => document.getElementById(id).className = 'step');
+    showError('Error: ' + err.message);
+  } finally {
+    document.getElementById('runBtn').disabled = false;
+  }
+}
+</script>
+</body>
+</html>

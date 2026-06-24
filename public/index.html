@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="JobFlow AI — an AI-powered job application agent that researches companies, generates cover letters, and manages your pipeline through Notion, Slack, and Gmail.">
+  <title>JobFlow AI — AI-Powered Job Application Agent</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+      <h1 class="header__title">JobFlow AI</h1>
+      <p class="header__subtitle">AI-Powered Job Application Agent</p>
+      <span class="header__badge">
+        <span class="header__badge-dot"></span>
+        MCP Connected
+      </span>
+    </header>
+
+    <!-- ===== PIPELINE VISUALIZER ===== -->
+    <section class="pipeline" aria-label="Agent Pipeline">
+      <div class="pipeline__track">
+
+        <!-- Step 1 -->
+        <div class="pipeline__step">
+          <div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-0">
+            <span class="pipeline__chip-icon">🔍</span>
+            <div>
+              <span class="pipeline__chip-label">Research</span>
+              <span class="pipeline__chip-sub">Company analysis</span>
+            </div>
+          </div>
+        </div>
+        <div class="pipeline__connector" id="pipeline-conn-0"></div>
+
+        <!-- Step 2 -->
+        <div class="pipeline__step">
+          <div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-1">
+            <span class="pipeline__chip-icon">✍️</span>
+            <div>
+              <span class="pipeline__chip-label">Cover Letter</span>
+              <span class="pipeline__chip-sub">AI-generated</span>
+            </div>
+          </div>
+        </div>
+        <div class="pipeline__connector" id="pipeline-conn-1"></div>
+
+        <!-- Step 3 -->
+        <div class="pipeline__step">
+          <div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-2">
+            <span class="pipeline__chip-icon">📋</span>
+            <div>
+              <span class="pipeline__chip-label">Notion</span>
+              <span class="pipeline__chip-sub">Save to database</span>
+            </div>
+          </div>
+        </div>
+        <div class="pipeline__connector" id="pipeline-conn-2"></div>
+
+        <!-- Step 4 -->
+        <div class="pipeline__step">
+          <div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-3">
+            <span class="pipeline__chip-icon">💬</span>
+            <div>
+              <span class="pipeline__chip-label">Slack</span>
+              <span class="pipeline__chip-sub">Send notification</span>
+            </div>
+          </div>
+        </div>
+        <div class="pipeline__connector" id="pipeline-conn-3"></div>
+
+        <!-- Step 5 -->
+        <div class="pipeline__step">
+          <div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-4">
+            <span class="pipeline__chip-icon">📧</span>
+            <div>
+              <span class="pipeline__chip-label">Gmail</span>
+              <span class="pipeline__chip-sub">Draft follow-up</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===== INPUT SECTION ===== -->
+    <section class="input-section" aria-label="Job Application Input">
+      <div class="glass-card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="input-company">Company Name</label>
+            <input class="form-input" type="text" id="input-company" placeholder="e.g. Google" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="input-role">Role / Position</label>
+            <input class="form-input" type="text" id="input-role" placeholder="e.g. Senior Frontend Engineer" autocomplete="off">
+          </div>
+          <div class="form-group form-group--full">
+            <label class="form-label" for="input-description">Job Description</label>
+            <textarea class="form-textarea" id="input-description" placeholder="Paste the full job description here…"></textarea>
+          </div>
+        </div>
+        <button class="btn-run" id="btn-run" type="button">
+          <span class="btn-run__spinner"></span>
+          <span class="btn-run__text">🚀 Run Agent</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ===== RESULTS SECTION ===== -->
+    <section class="results-section" id="results-section" aria-label="Agent Results">
+      <div class="results-grid">
+
+        <!-- Research Card -->
+        <article class="glass-card result-card" id="research-card">
+          <div class="result-card__header">
+            <div class="result-card__icon">🔍</div>
+            <h2 class="result-card__title">Company Research</h2>
+          </div>
+          <div id="research-content"></div>
+        </article>
+
+        <!-- Cover Letter Card -->
+        <article class="glass-card result-card" id="cover-letter-card">
+          <div class="result-card__header">
+            <div class="result-card__icon">✍️</div>
+            <h2 class="result-card__title">Cover Letter</h2>
+            <button class="btn-copy" id="btn-copy" type="button">
+              <span id="btn-copy-icon">📋</span>
+              <span id="btn-copy-text">Copy</span>
+            </button>
+          </div>
+          <div class="cover-letter-layout">
+            <div class="cover-letter-text" id="cover-letter-text"></div>
+            <aside class="cover-letter-sidebar">
+              <div>
+                <div class="match-score" id="match-score">
+                  <div class="match-score__ring" id="match-score-ring"></div>
+                  <span class="match-score__value" id="match-score-value">0</span>
+                </div>
+                <p class="match-score__label">Match Score</p>
+              </div>
+              <div id="key-matches-container">
+                <p class="research-section__label" style="text-align:center;">Key Matches</p>
+                <div class="key-matches" id="key-matches"></div>
+              </div>
+            </aside>
+          </div>
+          <div class="interview-tip" id="interview-tip">
+            <p class="interview-tip__label">💡 Interview Tip</p>
+            <p class="interview-tip__text" id="interview-tip-text"></p>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ===== ACTIONS BAR ===== -->
+    <div class="actions-bar" id="actions-bar" aria-label="Agent Actions">
+      <button class="btn-action" id="btn-notion" type="button">
+        <span class="btn-action__icon">💾</span>
+        <span class="btn-action__text">Save to Notion</span>
+      </button>
+      <button class="btn-action" id="btn-slack" type="button">
+        <span class="btn-action__icon">💬</span>
+        <span class="btn-action__text">Notify Slack</span>
+      </button>
+      <button class="btn-action" id="btn-email" type="button">
+        <span class="btn-action__icon">📧</span>
+        <span class="btn-action__text">Draft Email</span>
+      </button>
+    </div>
+
+    <!-- ===== APPLICATIONS DASHBOARD ===== -->
+    <section class="dashboard" aria-label="Application Tracker">
+      <div class="glass-card">
+        <div class="dashboard__header">
+          <h2 class="dashboard__title">📊 Application Tracker</h2>
+          <button class="btn-refresh" id="btn-refresh" type="button">
+            <span class="btn-refresh__icon">↻</span>
+            Refresh
+          </button>
+        </div>
+        <div id="dashboard-content">
+          <div class="empty-state">
+            <div class="empty-state__icon">📭</div>
+            <p class="empty-state__text">No applications tracked yet. Run the agent and save to Notion to start building your pipeline.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+      <p class="footer__main">Built by <strong>Arpita Oberoi</strong> · Powered by Gemini AI + MCP Connectors</p>
+      <p class="footer__sub">Notion · Slack · Gmail</p>
+    </footer>
+
+  </div>
+
+  <!-- ===== EMAIL MODAL ===== -->
+  <div class="modal-overlay" id="email-modal">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title">📧 Draft Follow-up Email</h3>
+        <button class="modal__close" id="modal-close" type="button">✕</button>
+      </div>
+      <div class="modal__body">
+        <div class="form-group">
+          <label class="form-label" for="email-to">Recipient Email</label>
+          <input class="form-input" type="email" id="email-to" placeholder="recruiter@company.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="email-subject">Subject</label>
+          <input class="form-input" type="text" id="email-subject" placeholder="Subject line">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="email-body">Body</label>
+          <textarea class="form-textarea" id="email-body" style="min-height:120px;"></textarea>
+        </div>
+      </div>
+      <div class="modal__actions">
+        <button class="btn-modal-secondary" id="modal-cancel" type="button">Cancel</button>
+        <button class="btn-modal-primary" id="modal-send" type="button">Open in Email Client</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TOAST CONTAINER ===== -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
