@@ -10,11 +10,11 @@
 
   /* ---------- DOM Refs ---------- */
   const $ = (sel) => document.querySelector(sel);
-  const $$ = (sel) => document.querySelectorAll(sel);
 
   const els = {
     company: $('#input-company'),
     role: $('#input-role'),
+    resume: $('#input-resume'),
     description: $('#input-description'),
     btnRun: $('#btn-run'),
     btnRunText: $('.btn-run__text'),
@@ -66,6 +66,69 @@
   }
 
   /* ============================================================
+     RESUME FILE UPLOAD
+     ============================================================ */
+  const resumeFileInput = document.getElementById('resume-file');
+  const resumeFileName = document.getElementById('resume-file-name');
+
+  if (resumeFileInput) {
+    resumeFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      resumeFileName.textContent = `⏳ Reading ${file.name}...`;
+
+      try {
+        let text = '';
+
+        if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+          // Plain text — read directly
+          text = await file.text();
+
+        } else if (file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
+          // DOCX — use mammoth
+          if (typeof mammoth === 'undefined') {
+            throw new Error('DOCX reader not loaded. Please paste your resume as text.');
+          }
+          const arrayBuffer = await file.arrayBuffer();
+          const result = await mammoth.extractRawText({ arrayBuffer });
+          text = result.value;
+
+        } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+          // PDF — use PDF.js
+          if (typeof pdfjsLib === 'undefined') {
+            throw new Error('PDF reader not loaded. Please paste your resume as text.');
+          }
+          const arrayBuffer = await file.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+          const pages = [];
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            pages.push(content.items.map((item) => item.str).join(' '));
+          }
+          text = pages.join('\n');
+
+        } else {
+          throw new Error('Unsupported file type. Please upload PDF, DOCX, or TXT.');
+        }
+
+        if (text.trim()) {
+          els.resume.value = text.trim();
+          resumeFileName.textContent = `✅ ${file.name} — loaded successfully`;
+          showToast('Resume loaded from file!', 'success');
+        } else {
+          throw new Error('Could not extract text from file. Please paste your resume manually.');
+        }
+
+      } catch (err) {
+        resumeFileName.textContent = `❌ Failed to read — please paste text below`;
+        showToast(err.message || 'Failed to read file.', 'error');
+      }
+    });
+  }
+
+  /* ============================================================
      PIPELINE VISUALIZER
      ============================================================ */
   function updatePipelineStep(stepIndex, status) {
@@ -94,11 +157,8 @@
       const conn = $(`#pipeline-conn-${stepIndex - 1}`);
       if (conn) {
         conn.classList.remove('pipeline__connector--active', 'pipeline__connector--complete');
-        if (status === 'active') {
-          conn.classList.add('pipeline__connector--active');
-        } else if (status === 'complete') {
-          conn.classList.add('pipeline__connector--complete');
-        }
+        if (status === 'active') conn.classList.add('pipeline__connector--active');
+        else if (status === 'complete') conn.classList.add('pipeline__connector--complete');
       }
     }
   }
@@ -107,9 +167,7 @@
     for (let i = 0; i < PIPELINE_STEPS; i++) {
       updatePipelineStep(i, 'inactive');
       const conn = $(`#pipeline-conn-${i}`);
-      if (conn) {
-        conn.classList.remove('pipeline__connector--active', 'pipeline__connector--complete');
-      }
+      if (conn) conn.classList.remove('pipeline__connector--active', 'pipeline__connector--complete');
     }
   }
 
@@ -121,11 +179,12 @@
 
     const company = els.company.value.trim();
     const role = els.role.value.trim();
+    const resume = els.resume.value.trim();
     const description = els.description.value.trim();
 
-    if (!company || !role || !description) {
-      showToast('Please fill in all fields before running the agent.', 'error');
-      highlightEmptyFields(company, role, description);
+    if (!company || !role || !resume || !description) {
+      showToast('Please fill in all fields — including your resume.', 'error');
+      highlightEmptyFields(company, role, resume, description);
       return;
     }
 
@@ -134,7 +193,6 @@
     els.resultsSection.classList.remove('visible');
     els.actionsBar.classList.remove('visible');
     resetPipeline();
-
     updatePipelineStep(0, 'active');
 
     try {
@@ -143,7 +201,7 @@
       const res = await fetch('/api/agent/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ company, role, description }),
+        body: JSON.stringify({ company, role, resume, description }),
       });
 
       if (!res.ok) {
@@ -204,6 +262,7 @@
   function setFormDisabled(disabled) {
     els.company.disabled = disabled;
     els.role.disabled = disabled;
+    els.resume.disabled = disabled;
     els.description.disabled = disabled;
     els.btnRun.disabled = disabled;
 
@@ -216,13 +275,15 @@
     }
   }
 
-  function highlightEmptyFields(company, role, description) {
+  function highlightEmptyFields(company, role, resume, description) {
     if (!company) flashBorder(els.company);
     if (!role) flashBorder(els.role);
+    if (!resume) flashBorder(els.resume);
     if (!description) flashBorder(els.description);
   }
 
   function flashBorder(el) {
+    if (!el) return;
     el.style.borderColor = 'rgba(239, 68, 68, 0.6)';
     el.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.1)';
     setTimeout(() => {
@@ -277,24 +338,18 @@
     }
 
     els.researchContent.innerHTML = researchHTML;
-
-    // Cover Letter
     els.coverLetterText.textContent = data.coverLetter || '';
 
-    // Match Score
     const score = parseInt(data.matchScore, 10) || 0;
     animateMatchScore(score);
 
-    // Key Matches
     const matches = data.keyMatches || [];
     els.keyMatches.innerHTML = matches
       .map((m) => `<span class="match-badge">${escapeHTML(m)}</span>`)
       .join('');
 
-    // Interview Tip
     els.interviewTipText.textContent = data.interviewTip || '';
 
-    // Reset copy button
     els.btnCopyText.textContent = 'Copy';
     els.btnCopyIcon.textContent = '📋';
     els.btnCopy.classList.remove('btn-copy--copied');
@@ -320,10 +375,8 @@
       const progress = Math.min(elapsed / duration, 1);
       const eased = easeOutCubic(progress);
       current = Math.round(eased * score);
-
       els.matchScoreValue.textContent = current;
       els.matchScoreRing.style.setProperty('--score-pct', current);
-
       if (progress < 1) requestAnimationFrame(tick);
     }
 
@@ -362,7 +415,6 @@
      ============================================================ */
   async function saveToNotion() {
     if (!currentResults) return;
-
     els.btnNotion.disabled = true;
 
     try {
@@ -381,7 +433,6 @@
       });
 
       if (!res.ok) throw new Error('Failed to save');
-
       showToast('Application saved to Notion!', 'success');
       loadApplications();
     } catch (err) {
@@ -396,7 +447,6 @@
      ============================================================ */
   async function notifySlack() {
     if (!currentResults) return;
-
     els.btnSlack.disabled = true;
 
     try {
@@ -412,7 +462,6 @@
       });
 
       if (!res.ok) throw new Error('Failed to notify');
-
       showToast('Slack notification sent!', 'success');
     } catch (err) {
       showToast(err.message || 'Failed to send Slack notification.', 'error');
@@ -432,7 +481,7 @@
 
     els.emailTo.value = '';
     els.emailSubject.value = `Application Follow-up: ${role} at ${company}`;
-    els.emailBody.value = `Dear Hiring Team,\n\nI recently submitted my application for the ${role} position at ${company} and wanted to follow up to express my continued interest.\n\nI believe my skills and experience align well with this role, and I would welcome the opportunity to discuss how I can contribute to your team.\n\nThank you for your time and consideration.\n\nBest regards,\nArpita Oberoi`;
+    els.emailBody.value = `Dear Hiring Team,\n\nI recently submitted my application for the ${role} position at ${company} and wanted to follow up to express my continued interest.\n\nI believe my skills and experience align well with this role, and I would welcome the opportunity to discuss how I can contribute to your team.\n\nThank you for your time and consideration.\n\nBest regards`;
 
     els.emailModal.classList.add('visible');
   }
@@ -455,19 +504,15 @@
       const res = await fetch('/api/gmail/draft', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to, subject, body,
-          company: currentResults?.company || '',
-        }),
+        body: JSON.stringify({ to, subject, body, company: currentResults?.company || '' }),
       });
 
       const data = await res.json().catch(() => ({}));
       const mailtoUrl = data.mailtoUrl || `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       window.open(mailtoUrl, '_blank');
-
       showToast('Email draft opened in your email client.', 'success');
       closeEmailModal();
-    } catch (err) {
+    } catch {
       const mailtoUrl = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       window.open(mailtoUrl, '_blank');
       showToast('Opened in email client.', 'info');
@@ -484,8 +529,6 @@
       if (!res.ok) throw new Error('Failed to fetch');
 
       const data = await res.json();
-
-      // FIX: server returns array directly, not { applications: [] }
       const apps = Array.isArray(data) ? data : (data.applications || []);
 
       if (!apps.length) {
@@ -510,13 +553,7 @@
       els.dashboardContent.innerHTML = `
         <table class="applications-table">
           <thead>
-            <tr>
-              <th>Company</th>
-              <th>Role</th>
-              <th>Score</th>
-              <th>Status</th>
-              <th>Date</th>
-            </tr>
+            <tr><th>Company</th><th>Role</th><th>Score</th><th>Status</th><th>Date</th></tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>`;
@@ -532,9 +569,7 @@
   function renderScoreBadge(score) {
     const s = parseInt(score, 10);
     if (isNaN(s)) return '<span class="score-badge score-badge--mid">—</span>';
-    let cls = 'low';
-    if (s >= 80) cls = 'high';
-    else if (s >= 60) cls = 'mid';
+    let cls = s >= 80 ? 'high' : s >= 60 ? 'mid' : 'low';
     return `<span class="score-badge score-badge--${cls}">${s}%</span>`;
   }
 

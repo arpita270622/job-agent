@@ -25,8 +25,6 @@
     <!-- ===== PIPELINE VISUALIZER ===== -->
     <section class="pipeline" aria-label="Agent Pipeline">
       <div class="pipeline__track">
-
-        <!-- Step 1 -->
         <div class="pipeline__step">
           <div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-0">
             <span class="pipeline__chip-icon">🔍</span>
@@ -37,8 +35,6 @@
           </div>
         </div>
         <div class="pipeline__connector" id="pipeline-conn-0"></div>
-
-        <!-- Step 2 -->
         <div class="pipeline__step">
           <div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-1">
             <span class="pipeline__chip-icon">✍️</span>
@@ -49,8 +45,6 @@
           </div>
         </div>
         <div class="pipeline__connector" id="pipeline-conn-1"></div>
-
-        <!-- Step 3 -->
         <div class="pipeline__step">
           <div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-2">
             <span class="pipeline__chip-icon">📋</span>
@@ -61,8 +55,6 @@
           </div>
         </div>
         <div class="pipeline__connector" id="pipeline-conn-2"></div>
-
-        <!-- Step 4 -->
         <div class="pipeline__step">
           <div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-3">
             <span class="pipeline__chip-icon">💬</span>
@@ -73,8 +65,6 @@
           </div>
         </div>
         <div class="pipeline__connector" id="pipeline-conn-3"></div>
-
-        <!-- Step 5 -->
         <div class="pipeline__step">
           <div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-4">
             <span class="pipeline__chip-icon">📧</span>
@@ -84,7 +74,6 @@
             </div>
           </div>
         </div>
-
       </div>
     </section>
 
@@ -92,18 +81,65 @@
     <section class="input-section" aria-label="Job Application Input">
       <div class="glass-card">
         <div class="form-grid">
+
           <div class="form-group">
             <label class="form-label" for="input-company">Company Name</label>
             <input class="form-input" type="text" id="input-company" placeholder="e.g. Google" autocomplete="off">
           </div>
+
           <div class="form-group">
             <label class="form-label" for="input-role">Role / Position</label>
             <input class="form-input" type="text" id="input-role" placeholder="e.g. Senior Frontend Engineer" autocomplete="off">
           </div>
+
+          <!-- Resume Upload -->
+          <div class="form-group form-group--full">
+            <label class="form-label">
+              Your Resume
+              <span style="font-size:11px;color:#888;font-weight:400;margin-left:8px;">Upload file or paste text</span>
+            </label>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+
+              <label id="resume-upload-label" style="
+                display:flex;
+                align-items:center;
+                gap:14px;
+                padding:14px 18px;
+                border:1.5px dashed rgba(139,92,246,0.35);
+                border-radius:12px;
+                cursor:pointer;
+                background:rgba(139,92,246,0.04);
+                transition:all 0.2s;
+              "
+              onmouseover="this.style.borderColor='rgba(139,92,246,0.65)';this.style.background='rgba(139,92,246,0.08)'"
+              onmouseout="this.style.borderColor='rgba(139,92,246,0.35)';this.style.background='rgba(139,92,246,0.04)'">
+                <span style="font-size:1.6rem;line-height:1;">📄</span>
+                <div style="flex:1;">
+                  <div id="resume-file-name" style="font-size:0.85rem;color:#c4b5fd;font-weight:500;">
+                    Click to upload PDF, DOCX, or TXT
+                  </div>
+                  <div style="font-size:0.72rem;color:#64748b;margin-top:3px;">
+                    Supports .pdf · .docx · .doc · .txt — or paste below
+                  </div>
+                </div>
+                <input type="file" id="resume-file" accept=".pdf,.docx,.doc,.txt" style="display:none;" />
+              </label>
+
+              <textarea
+                class="form-textarea"
+                id="input-resume"
+                placeholder="Or paste your resume text here — education, experience, projects, skills..."
+                style="min-height:120px;"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Job Description -->
           <div class="form-group form-group--full">
             <label class="form-label" for="input-description">Job Description</label>
             <textarea class="form-textarea" id="input-description" placeholder="Paste the full job description here…"></textarea>
           </div>
+
         </div>
         <button class="btn-run" id="btn-run" type="button">
           <span class="btn-run__spinner"></span>
@@ -135,22 +171,25 @@
               <span id="btn-copy-text">Copy</span>
             </button>
           </div>
-          <div class="cover-letter-layout">
-            <div class="cover-letter-text" id="cover-letter-text"></div>
-            <aside class="cover-letter-sidebar">
-              <div>
-                <div class="match-score" id="match-score">
-                  <div class="match-score__ring" id="match-score-ring"></div>
-                  <span class="match-score__value" id="match-score-value">0</span>
-                </div>
-                <p class="match-score__label">Match Score</p>
+
+          <!-- Score + Key Matches row (ABOVE cover letter) -->
+          <div class="score-row" style="display:flex;align-items:center;gap:28px;padding:4px 0 22px;margin-bottom:20px;border-bottom:1px solid var(--border-subtle);flex-wrap:wrap;">
+            <div style="text-align:center;flex-shrink:0;">
+              <div class="match-score" id="match-score">
+                <div class="match-score__ring" id="match-score-ring"></div>
+                <span class="match-score__value" id="match-score-value">0</span>
               </div>
-              <div id="key-matches-container">
-                <p class="research-section__label" style="text-align:center;">Key Matches</p>
-                <div class="key-matches" id="key-matches"></div>
-              </div>
-            </aside>
+              <p class="match-score__label">Match Score</p>
+            </div>
+            <div id="key-matches-container" style="flex:1;min-width:240px;">
+              <p class="research-section__label" style="margin-bottom:10px;">Key Matches</p>
+              <div class="key-matches" id="key-matches" style="justify-content:flex-start;"></div>
+            </div>
           </div>
+
+          <!-- Cover letter full width -->
+          <div class="cover-letter-text" id="cover-letter-text" style="white-space:pre-wrap;"></div>
+
           <div class="interview-tip" id="interview-tip">
             <p class="interview-tip__label">💡 Interview Tip</p>
             <p class="interview-tip__text" id="interview-tip-text"></p>
@@ -233,6 +272,15 @@
 
   <!-- ===== TOAST CONTAINER ===== -->
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <!-- PDF.js and Mammoth for file parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script>
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
 
   <script src="app.js"></script>
 </body>

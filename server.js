@@ -23,48 +23,6 @@ const {
   SLACK_WEBHOOK_URL,
 } = process.env;
 
-const RESUME = {
-  name: 'Arpita Oberoi',
-  profile: 'B.Tech ECE with IoT, NSUT 2026, CGPA 7.52',
-  education: 'B.Tech ECE with IoT, Netaji Subhash University of Technology 2026',
-  experience: [
-    {
-      title: 'Backend AI ML Developer Intern',
-      company: 'Olbrain',
-      highlights: [
-        'Designed end-to-end agentic AI workflows on Olbrain Studio',
-        'Built React/Next.js + Python/FastAPI features on GCP Firestore',
-        'Integrated webhook triggers and REST APIs for multi-step agent pipelines',
-        'Automated reporting via Google Cloud Scheduler',
-      ],
-    },
-    {
-      title: 'React Developer Intern',
-      company: "Let's Try (Shark Tank startup)",
-      highlights: [
-        'Built payment and cart modules with React, Node, Express + Zaakpay Gateway for 500+ users',
-        'Integrated Google Maps API for location-based delivery flows',
-        'Reduced API latency by 20% using Postman and Git optimizations',
-      ],
-    },
-    {
-      title: 'Research Consultant',
-      company: 'WorldQuant',
-      highlights: [
-        'Built and tested 40+ financial model alphas using Fast Expression Language (FEL)',
-        'Improved forecast accuracy by 15%',
-        'Qualified Stage 2 International Quant Championship, WorldQuant BRAIN 2025',
-      ],
-    },
-  ],
-  projects: [
-    { name: 'Real-time Collaborative Code Editor', description: 'React, Node, WebSockets — multi-user sync with minimal latency' },
-    { name: 'Team Building Application', description: 'Next.js, Liveblocks — whiteboard app for 50+ concurrent users' },
-    { name: 'Crypto Tracker', description: 'React — real-time data for 200+ coins, 40% faster queries' },
-  ],
-  skills: ['Python', 'JavaScript', 'React', 'Node.js', 'FastAPI', 'GCP', 'SQL', 'Redux', 'Tailwind', 'NumPy', 'Pandas', 'REST APIs', 'Git', 'Agentic AI workflows'],
-};
-
 // ── 1. Health check ────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
   res.json({
@@ -80,9 +38,12 @@ app.get('/api/health', (_req, res) => {
 // ── 2. Run agent ───────────────────────────────────────────────────────────
 app.post('/api/agent/run', async (req, res) => {
   try {
-    const { company, role, description } = req.body;
+    const { company, role, description, resume } = req.body;
     if (!company || !role) {
       return res.status(400).json({ error: 'Missing required fields', message: 'Please provide company and role.' });
+    }
+    if (!resume) {
+      return res.status(400).json({ error: 'Missing resume', message: 'Please provide your resume.' });
     }
     if (!GEMINI_API_KEY) {
       return res.status(503).json({ error: 'Gemini API key not configured' });
@@ -94,16 +55,7 @@ app.post('/api/agent/run', async (req, res) => {
 You are an expert career advisor and job application strategist.
 
 CANDIDATE RESUME:
-Name: ${RESUME.name}
-Profile: ${RESUME.profile}
-Education: ${RESUME.education}
-Skills: ${RESUME.skills.join(', ')}
-
-Experience:
-${RESUME.experience.map(e => `- ${e.title} at ${e.company}: ${e.highlights.join('; ')}`).join('\n')}
-
-Projects:
-${RESUME.projects.map(p => `- ${p.name}: ${p.description}`).join('\n')}
+${resume}
 
 TARGET JOB:
 Company: ${company}
@@ -112,7 +64,7 @@ Job Description: ${description || 'Not provided — use your knowledge of typica
 
 TASKS — complete every one:
 1. Company Research: Summarise the company (what they do, size, industry), their culture & values, likely tech stack, and recent highlights.
-2. Tailored Cover Letter: Write a professional cover letter (300-400 words) addressed to the Hiring Manager at ${company}. Use specific skills and experiences from the resume. Confident yet genuine tone.
+2. Tailored Cover Letter: Write a professional cover letter (300-400 words) addressed to the Hiring Manager at ${company}. Use specific skills and experiences from the resume above. Confident yet genuine tone. Do NOT invent details not in the resume.
 3. Match Score: Calculate a score from 0 to 100 based on how well the candidate's skills match the role.
 4. Key Matches: List specific skills or experiences from the resume that directly match this role.
 5. Interview Tip: Give one actionable company-specific interview tip.
@@ -131,13 +83,12 @@ RESPOND IN THIS EXACT JSON FORMAT (no markdown, no code fences, just raw JSON):
   "keyMatches": ["skill1", "skill2"]
 }`;
 
-    // Using gemini-1.5-flash — works on free tier in India
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
     const geminiResponse = await axios.post(
       geminiUrl,
       { contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7 } },
-      { timeout: 30000 }
+      { timeout: 60000}
     );
 
     const rawText = geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
@@ -182,7 +133,7 @@ app.post('/api/notion/save', async (req, res) => {
     if (!company) return res.status(400).json({ error: 'company is required' });
 
     console.log(`[Notion] Saving: ${company} — ${role}`);
-    const truncate = (str, max = 2000) => str && str.length > max ? str.substring(0, max) + '…' : str || '';
+    const truncate = (str, max = 1999) => str && str.length > max ? str.substring(0, max) + '…' : str || '';
 
     const response = await axios.post(
       'https://api.notion.com/v1/pages',
@@ -311,7 +262,7 @@ app.post('/api/gmail/draft', (req, res) => {
 
     const mailtoUrl = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body || '')}`;
     const followUpSubject = `Following Up — ${subject}`;
-    const followUpBody = `Dear Hiring Team at ${company || 'the company'},\n\nI wanted to follow up on my application. I remain very enthusiastic about the opportunity and believe my background in AI/ML and full-stack development aligns well with the role.\n\nPlease let me know if there are any additional materials I can provide.\n\nBest regards,\n${RESUME.name}`;
+    const followUpBody = `Dear Hiring Team at ${company || 'the company'},\n\nI wanted to follow up on my application. I remain very enthusiastic about the opportunity and believe my background aligns well with the role.\n\nPlease let me know if there are any additional materials I can provide.\n\nBest regards`;
 
     res.json({
       success: true,
