@@ -7,6 +7,10 @@ An end-to-end AI-powered job application agent built with Node.js, Express.js, a
 ![MCP](https://img.shields.io/badge/MCP-Notion%20%7C%20Slack%20%7C%20Gmail-purple?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square)
 
+**🌐 Live Demo: [appyiq-muhj.onrender.com](https://appyiq-muhj.onrender.com)**
+
+> ⚠️ Hosted on Render free tier — first load may take ~30 seconds to wake up.
+
 ---
 
 ## What It Does
