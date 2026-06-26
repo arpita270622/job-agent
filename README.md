@@ -1,4 +1,4 @@
-# 🚀 JobFlow AI — Smart Job Application Agent
+# 🚀 ApplyIQ — Smart Job Application Agent
 
 An end-to-end AI-powered job application assistant that autonomously researches companies, generates tailored cover letters, and manages application state across multiple services — all from a single dashboard.
 
@@ -147,7 +147,7 @@ job-agent/
 ## 👩‍💻 Author
 
 **Arpita Oberoi**  
-B.Tech CSE | AI/ML Enthusiast
+B.Tech EIOT
 
 ---
 
