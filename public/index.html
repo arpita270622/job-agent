@@ -3,285 +3,331 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="JobFlow AI — an AI-powered job application agent that researches companies, generates cover letters, and manages your pipeline through Notion, Slack, and Gmail.">
-  <title>JobFlow AI — AI-Powered Job Application Agent</title>
+  <title>ApplyIQ — AI-Powered Job Application Agent</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+  <!-- Feature 2: jsPDF for cover letter PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Feature 3: Apply saved theme immediately to prevent flash -->
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('applyiq_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch(e) {}
+    })();
+  </script>
 </head>
 <body>
+<div class="app-container">
 
-  <div class="app-container">
+  <!-- Feature 3: Theme toggle — fixed top-right corner -->
+  <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle colour scheme">
+    <span class="theme-toggle__icon" id="theme-toggle-icon">🌙</span>
+  </button>
 
-    <!-- ===== HEADER ===== -->
-    <header class="header">
-      <h1 class="header__title">JobFlow AI</h1>
-      <p class="header__subtitle">AI-Powered Job Application Agent</p>
-      <span class="header__badge">
-        <span class="header__badge-dot"></span>
-        MCP Connected
-      </span>
-    </header>
+  <!-- HEADER -->
+  <header class="header">
+    <h1 class="header__title">ApplyIQ</h1>
+    <p class="header__subtitle">AI-Powered Job Application Agent</p>
+    <span class="header__badge"><span class="header__badge-dot"></span>MCP Connected</span>
+  </header>
 
-    <!-- ===== PIPELINE VISUALIZER ===== -->
-    <section class="pipeline" aria-label="Agent Pipeline">
-      <div class="pipeline__track">
-        <div class="pipeline__step">
-          <div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-0">
-            <span class="pipeline__chip-icon">🔍</span>
-            <div>
-              <span class="pipeline__chip-label">Research</span>
-              <span class="pipeline__chip-sub">Company analysis</span>
-            </div>
-          </div>
+  <!-- PIPELINE -->
+  <section class="pipeline">
+    <div class="pipeline__track">
+      <div class="pipeline__step"><div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-0"><span class="pipeline__chip-icon">🔍</span><div><span class="pipeline__chip-label">Research</span><span class="pipeline__chip-sub">Company analysis</span></div></div></div>
+      <div class="pipeline__connector" id="pipeline-conn-0"></div>
+      <div class="pipeline__step"><div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-1"><span class="pipeline__chip-icon">✍️</span><div><span class="pipeline__chip-label">Cover Letter</span><span class="pipeline__chip-sub">AI-generated</span></div></div></div>
+      <div class="pipeline__connector" id="pipeline-conn-1"></div>
+      <div class="pipeline__step"><div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-2"><span class="pipeline__chip-icon">📋</span><div><span class="pipeline__chip-label">Notion</span><span class="pipeline__chip-sub">Save to database</span></div></div></div>
+      <div class="pipeline__connector" id="pipeline-conn-2"></div>
+      <div class="pipeline__step"><div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-3"><span class="pipeline__chip-icon">💬</span><div><span class="pipeline__chip-label">Slack</span><span class="pipeline__chip-sub">Send notification</span></div></div></div>
+      <div class="pipeline__connector" id="pipeline-conn-3"></div>
+      <div class="pipeline__step"><div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-4"><span class="pipeline__chip-icon">📧</span><div><span class="pipeline__chip-label">Gmail</span><span class="pipeline__chip-sub">Draft follow-up</span></div></div></div>
+    </div>
+  </section>
+
+  <!-- INPUT -->
+  <section class="input-section">
+    <div class="glass-card">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label" for="input-company">Company Name</label>
+          <input class="form-input" type="text" id="input-company" placeholder="e.g. Google" autocomplete="off">
         </div>
-        <div class="pipeline__connector" id="pipeline-conn-0"></div>
-        <div class="pipeline__step">
-          <div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-1">
-            <span class="pipeline__chip-icon">✍️</span>
-            <div>
-              <span class="pipeline__chip-label">Cover Letter</span>
-              <span class="pipeline__chip-sub">AI-generated</span>
-            </div>
-          </div>
+        <div class="form-group">
+          <label class="form-label" for="input-role">Role / Position</label>
+          <input class="form-input" type="text" id="input-role" placeholder="e.g. Senior Frontend Engineer" autocomplete="off">
         </div>
-        <div class="pipeline__connector" id="pipeline-conn-1"></div>
-        <div class="pipeline__step">
-          <div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-2">
-            <span class="pipeline__chip-icon">📋</span>
-            <div>
-              <span class="pipeline__chip-label">Notion</span>
-              <span class="pipeline__chip-sub">Save to database</span>
-            </div>
-          </div>
-        </div>
-        <div class="pipeline__connector" id="pipeline-conn-2"></div>
-        <div class="pipeline__step">
-          <div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-3">
-            <span class="pipeline__chip-icon">💬</span>
-            <div>
-              <span class="pipeline__chip-label">Slack</span>
-              <span class="pipeline__chip-sub">Send notification</span>
-            </div>
-          </div>
-        </div>
-        <div class="pipeline__connector" id="pipeline-conn-3"></div>
-        <div class="pipeline__step">
-          <div class="pipeline__chip pipeline__chip--inactive" id="pipeline-step-4">
-            <span class="pipeline__chip-icon">📧</span>
-            <div>
-              <span class="pipeline__chip-label">Gmail</span>
-              <span class="pipeline__chip-sub">Draft follow-up</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== INPUT SECTION ===== -->
-    <section class="input-section" aria-label="Job Application Input">
-      <div class="glass-card">
-        <div class="form-grid">
-
-          <div class="form-group">
-            <label class="form-label" for="input-company">Company Name</label>
-            <input class="form-input" type="text" id="input-company" placeholder="e.g. Google" autocomplete="off">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="input-role">Role / Position</label>
-            <input class="form-input" type="text" id="input-role" placeholder="e.g. Senior Frontend Engineer" autocomplete="off">
-          </div>
-
-          <!-- Resume Upload -->
-          <div class="form-group form-group--full">
-            <label class="form-label">
-              Your Resume
-              <span style="font-size:11px;color:#888;font-weight:400;margin-left:8px;">Upload file or paste text</span>
-            </label>
-            <div style="display:flex;flex-direction:column;gap:10px;">
-
-              <label id="resume-upload-label" style="
-                display:flex;
-                align-items:center;
-                gap:14px;
-                padding:14px 18px;
-                border:1.5px dashed rgba(139,92,246,0.35);
-                border-radius:12px;
-                cursor:pointer;
-                background:rgba(139,92,246,0.04);
-                transition:all 0.2s;
-              "
+        <div class="form-group form-group--full">
+          <label class="form-label">Your Resume <span style="font-size:11px;color:#888;font-weight:400;margin-left:8px;">Upload file or paste text</span></label>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <label id="resume-upload-label" style="display:flex;align-items:center;gap:14px;padding:14px 18px;border:1.5px dashed rgba(139,92,246,0.35);border-radius:12px;cursor:pointer;background:rgba(139,92,246,0.04);transition:all 0.2s;"
               onmouseover="this.style.borderColor='rgba(139,92,246,0.65)';this.style.background='rgba(139,92,246,0.08)'"
               onmouseout="this.style.borderColor='rgba(139,92,246,0.35)';this.style.background='rgba(139,92,246,0.04)'">
-                <span style="font-size:1.6rem;line-height:1;">📄</span>
-                <div style="flex:1;">
-                  <div id="resume-file-name" style="font-size:0.85rem;color:#c4b5fd;font-weight:500;">
-                    Click to upload PDF, DOCX, or TXT
-                  </div>
-                  <div style="font-size:0.72rem;color:#64748b;margin-top:3px;">
-                    Supports .pdf · .docx · .doc · .txt — or paste below
-                  </div>
-                </div>
-                <input type="file" id="resume-file" accept=".pdf,.docx,.doc,.txt" style="display:none;" />
-              </label>
-
-              <textarea
-                class="form-textarea"
-                id="input-resume"
-                placeholder="Or paste your resume text here — education, experience, projects, skills..."
-                style="min-height:120px;"
-              ></textarea>
-            </div>
-          </div>
-
-          <!-- Job Description -->
-          <div class="form-group form-group--full">
-            <label class="form-label" for="input-description">Job Description</label>
-            <textarea class="form-textarea" id="input-description" placeholder="Paste the full job description here…"></textarea>
-          </div>
-
-        </div>
-        <button class="btn-run" id="btn-run" type="button">
-          <span class="btn-run__spinner"></span>
-          <span class="btn-run__text">🚀 Run Agent</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- ===== RESULTS SECTION ===== -->
-    <section class="results-section" id="results-section" aria-label="Agent Results">
-      <div class="results-grid">
-
-        <!-- Research Card -->
-        <article class="glass-card result-card" id="research-card">
-          <div class="result-card__header">
-            <div class="result-card__icon">🔍</div>
-            <h2 class="result-card__title">Company Research</h2>
-          </div>
-          <div id="research-content"></div>
-        </article>
-
-        <!-- Cover Letter Card -->
-        <article class="glass-card result-card" id="cover-letter-card">
-          <div class="result-card__header">
-            <div class="result-card__icon">✍️</div>
-            <h2 class="result-card__title">Cover Letter</h2>
-            <button class="btn-copy" id="btn-copy" type="button">
-              <span id="btn-copy-icon">📋</span>
-              <span id="btn-copy-text">Copy</span>
-            </button>
-          </div>
-
-          <!-- Score + Key Matches row (ABOVE cover letter) -->
-          <div class="score-row" style="display:flex;align-items:center;gap:28px;padding:4px 0 22px;margin-bottom:20px;border-bottom:1px solid var(--border-subtle);flex-wrap:wrap;">
-            <div style="text-align:center;flex-shrink:0;">
-              <div class="match-score" id="match-score">
-                <div class="match-score__ring" id="match-score-ring"></div>
-                <span class="match-score__value" id="match-score-value">0</span>
+              <span style="font-size:1.6rem;">📄</span>
+              <div style="flex:1;">
+                <div id="resume-file-name" style="font-size:0.85rem;color:#c4b5fd;font-weight:500;">Click to upload PDF, DOCX, or TXT</div>
+                <div style="font-size:0.72rem;color:#64748b;margin-top:3px;">Supports .pdf · .docx · .doc · .txt — or paste below</div>
               </div>
-              <p class="match-score__label">Match Score</p>
-            </div>
-            <div id="key-matches-container" style="flex:1;min-width:240px;">
-              <p class="research-section__label" style="margin-bottom:10px;">Key Matches</p>
-              <div class="key-matches" id="key-matches" style="justify-content:flex-start;"></div>
-            </div>
+              <input type="file" id="resume-file" accept=".pdf,.docx,.doc,.txt" style="display:none;" />
+            </label>
+            <textarea class="form-textarea" id="input-resume" placeholder="Or paste your resume text here..." style="min-height:120px;"></textarea>
           </div>
-
-          <!-- Cover letter full width -->
-          <div class="cover-letter-text" id="cover-letter-text" style="white-space:pre-wrap;"></div>
-
-          <div class="interview-tip" id="interview-tip">
-            <p class="interview-tip__label">💡 Interview Tip</p>
-            <p class="interview-tip__text" id="interview-tip-text"></p>
-          </div>
-        </article>
-
+        </div>
+        <div class="form-group form-group--full">
+          <label class="form-label" for="input-description">Job Description</label>
+          <textarea class="form-textarea" id="input-description" placeholder="Paste the full job description here…"></textarea>
+        </div>
       </div>
-    </section>
 
-    <!-- ===== ACTIONS BAR ===== -->
-    <div class="actions-bar" id="actions-bar" aria-label="Agent Actions">
-      <button class="btn-action" id="btn-notion" type="button">
-        <span class="btn-action__icon">💾</span>
-        <span class="btn-action__text">Save to Notion</span>
-      </button>
-      <button class="btn-action" id="btn-slack" type="button">
-        <span class="btn-action__icon">💬</span>
-        <span class="btn-action__text">Notify Slack</span>
-      </button>
-      <button class="btn-action" id="btn-email" type="button">
-        <span class="btn-action__icon">📧</span>
-        <span class="btn-action__text">Draft Email</span>
+      <!-- Feature 4: Cover Letter Tone Selector -->
+      <div class="tone-selector" id="tone-selector">
+        <p class="form-label" style="margin-bottom:10px;">Cover Letter Tone</p>
+        <div class="tone-options">
+          <label class="tone-option">
+            <input type="radio" name="tone" value="formal" checked>
+            <span class="tone-option__card">
+              <span class="tone-option__icon">🎩</span>
+              <span class="tone-option__label">Formal</span>
+              <span class="tone-option__desc">Professional & polished</span>
+            </span>
+          </label>
+          <label class="tone-option">
+            <input type="radio" name="tone" value="conversational">
+            <span class="tone-option__card">
+              <span class="tone-option__icon">💬</span>
+              <span class="tone-option__label">Conversational</span>
+              <span class="tone-option__desc">Warm & human</span>
+            </span>
+          </label>
+          <label class="tone-option">
+            <input type="radio" name="tone" value="bold">
+            <span class="tone-option__card">
+              <span class="tone-option__icon">⚡</span>
+              <span class="tone-option__label">Bold</span>
+              <span class="tone-option__desc">Confident & direct</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <button class="btn-run" id="btn-run" type="button">
+        <span class="btn-run__spinner"></span>
+        <span class="btn-run__text">🚀 Run Agent</span>
       </button>
     </div>
+  </section>
 
-    <!-- ===== APPLICATIONS DASHBOARD ===== -->
-    <section class="dashboard" aria-label="Application Tracker">
-      <div class="glass-card">
-        <div class="dashboard__header">
-          <h2 class="dashboard__title">📊 Application Tracker</h2>
-          <button class="btn-refresh" id="btn-refresh" type="button">
-            <span class="btn-refresh__icon">↻</span>
-            Refresh
+  <!-- RESULTS -->
+  <section class="results-section" id="results-section">
+    <div class="results-grid">
+
+      <article class="glass-card result-card" id="research-card">
+        <div class="result-card__header">
+          <div class="result-card__icon">🔍</div>
+          <h2 class="result-card__title">Company Research</h2>
+        </div>
+        <div id="research-content"></div>
+      </article>
+
+      <article class="glass-card result-card" id="ats-card">
+        <div class="result-card__header">
+          <div class="result-card__icon">🤖</div>
+          <h2 class="result-card__title">ATS Analysis</h2>
+          <span id="ats-pass-badge"></span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:10px;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.12);margin-bottom:16px;">
+          <span style="font-size:15px;flex-shrink:0;">🤖</span>
+          <p style="font-size:16px;color:var(--text-secondary);margin:0;line-height:1.8;">
+            This score mirrors how <strong style="color:#fca5a5;">Workday, Greenhouse & Lever</strong> scan resumes — pure keyword matching against the JD, no human judgment.
+            Score <strong style="color:#fca5a5;">70+</strong> means your resume passes the bot and reaches a human recruiter.
+            <strong style="color:#fca5a5;">Different from Match Score</strong> — that's the AI's holistic read of your fit.
+          </p>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:24px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border-subtle);flex-wrap:wrap;">
+          <div style="text-align:center;flex-shrink:0;">
+            <div class="match-score" id="ats-score-ring-container">
+              <div class="match-score__ring" id="ats-score-ring"></div>
+              <span class="match-score__value" id="ats-score-value">0</span>
+            </div>
+            <p class="match-score__label">ATS Score</p>
+            <p style="font-size:10px;color:var(--text-muted);margin-top:2px;">Pass threshold: 70</p>
+          </div>
+          <div style="flex:1;min-width:180px;">
+            <p id="ats-recommendation" style="font-size:0.85rem;color:var(--text-secondary);line-height:1.5;margin-bottom:14px;"></p>
+            <div id="ats-bars" style="display:flex;flex-direction:column;gap:9px;"></div>
+          </div>
+        </div>
+        <div id="ats-experience" style="display:none;margin-bottom:16px;"></div>
+        <div style="margin-bottom:18px;">
+          <p class="research-section__label" style="margin-bottom:10px;">🔴 Required Keywords (from JD)</p>
+          <div style="margin-bottom:8px;"><span style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:5px;">✓ Matched in your resume</span><div id="ats-required-matched" style="display:flex;flex-wrap:wrap;gap:5px;"></div></div>
+          <div><span style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:5px;">✗ Missing — add these to your resume</span><div id="ats-required-missing" style="display:flex;flex-wrap:wrap;gap:5px;"></div></div>
+        </div>
+        <div id="ats-preferred-section" style="margin-bottom:18px;">
+          <p class="research-section__label" style="margin-bottom:10px;">🟡 Preferred Keywords (from JD)</p>
+          <div style="margin-bottom:8px;"><span style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:5px;">✓ Matched</span><div id="ats-preferred-matched" style="display:flex;flex-wrap:wrap;gap:5px;"></div></div>
+          <div><span style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:5px;">✗ Missing</span><div id="ats-preferred-missing" style="display:flex;flex-wrap:wrap;gap:5px;"></div></div>
+        </div>
+        <div style="margin-bottom:18px;">
+          <p class="research-section__label" style="margin-bottom:10px;">📋 Resume Checklist</p>
+          <div id="ats-checklist" style="display:flex;flex-direction:column;gap:6px;"></div>
+        </div>
+        <div id="ats-skills-gap-section" style="display:none;">
+          <p class="research-section__label" style="margin-bottom:8px;">🟣 Skills to Develop (AI Insight)</p>
+          <div id="ats-skills-gap" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+        </div>
+      </article>
+
+      <article class="glass-card result-card" id="cover-letter-card">
+        <div class="result-card__header">
+          <div class="result-card__icon">✍️</div>
+          <h2 class="result-card__title">Cover Letter</h2>
+          <!-- Feature 4: Tone badge -->
+          <span id="cover-letter-tone-tag" style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(139,92,246,0.12);color:#c4b5fd;border:1px solid rgba(139,92,246,0.2);"></span>
+          <button class="btn-copy" id="btn-copy" type="button">
+            <span id="btn-copy-icon">📋</span>
+            <span id="btn-copy-text">Copy</span>
+          </button>
+          <!-- Feature 2: Export PDF button -->
+          <button class="btn-copy" id="btn-pdf" type="button">
+            <span id="btn-pdf-icon">⬇️</span>
+            <span id="btn-pdf-text">Export PDF</span>
           </button>
         </div>
-        <div id="dashboard-content">
-          <div class="empty-state">
-            <div class="empty-state__icon">📭</div>
-            <p class="empty-state__text">No applications tracked yet. Run the agent and save to Notion to start building your pipeline.</p>
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:10px;background:rgba(99,102,241,0.05);border:1px solid rgba(99,102,241,0.15);margin-bottom:14px;">
+          <span style="font-size:15px;flex-shrink:0;">ℹ️</span>
+          <p style="font-size:16px;color:var(--text-secondary);margin:0;line-height:1.8;">
+            <strong style="color:#a5b4fc;">Match Score</strong> = Gemini AI's holistic judgment of your overall fit — like a human recruiter reading your resume.
+            <strong style="color:#a5b4fc;">ATS Score</strong> = keyword overlap with the JD — like the Workday bot.
+            You need <strong style="color:#a5b4fc;">both</strong> to be high to get an interview.
+          </p>
+        </div>
+        <div style="display:flex;align-items:center;gap:28px;padding:4px 0 22px;margin-bottom:20px;border-bottom:1px solid var(--border-subtle);flex-wrap:wrap;">
+          <div style="text-align:center;flex-shrink:0;">
+            <div class="match-score" id="match-score">
+              <div class="match-score__ring" id="match-score-ring"></div>
+              <span class="match-score__value" id="match-score-value">0</span>
+            </div>
+            <p class="match-score__label">Match Score</p>
+          </div>
+          <div style="flex:1;min-width:240px;">
+            <p class="research-section__label" style="margin-bottom:10px;">Key Matches</p>
+            <div class="key-matches" id="key-matches" style="justify-content:flex-start;"></div>
           </div>
         </div>
-      </div>
-    </section>
+        <div class="cover-letter-text" id="cover-letter-text" style="white-space:pre-wrap;"></div>
+        <div class="interview-tip" id="interview-tip">
+          <p class="interview-tip__label">💡 Interview Tip</p>
+          <p class="interview-tip__text" id="interview-tip-text"></p>
+        </div>
+      </article>
 
-    <!-- ===== FOOTER ===== -->
-    <footer class="footer">
-      <p class="footer__main">Built by <strong>Arpita Oberoi</strong> · Powered by Gemini AI + MCP Connectors</p>
-      <p class="footer__sub">Notion · Slack · Gmail</p>
-    </footer>
+    </div>
+  </section>
 
+  <!-- ACTIONS BAR -->
+  <div class="actions-bar" id="actions-bar">
+    <button class="btn-action" id="btn-notion" type="button"><span class="btn-action__icon">💾</span><span class="btn-action__text">Save to Notion</span></button>
+    <button class="btn-action" id="btn-slack" type="button"><span class="btn-action__icon">💬</span><span class="btn-action__text">Notify Slack</span></button>
+    <button class="btn-action" id="btn-email" type="button"><span class="btn-action__icon">📧</span><span class="btn-action__text">Draft Email</span></button>
+    <button class="btn-action" id="btn-prep" type="button"><span class="btn-action__icon">🎯</span><span class="btn-action__text">Interview Prep</span></button>
+    <button class="btn-action" id="btn-linkedin" type="button"><span class="btn-action__icon">💼</span><span class="btn-action__text">LinkedIn Message</span></button>
+    <button class="btn-action btn-action--highlight" id="btn-optimize" type="button"><span class="btn-action__icon">✨</span><span class="btn-action__text">Optimize Resume</span></button>
   </div>
 
-  <!-- ===== EMAIL MODAL ===== -->
-  <div class="modal-overlay" id="email-modal">
-    <div class="modal">
-      <div class="modal__header">
-        <h3 class="modal__title">📧 Draft Follow-up Email</h3>
-        <button class="modal__close" id="modal-close" type="button">✕</button>
+  <!-- DASHBOARD -->
+  <section class="dashboard">
+    <div class="glass-card">
+      <div class="dashboard__header">
+        <h2 class="dashboard__title">📊 Application Tracker</h2>
+        <button class="btn-refresh" id="btn-refresh" type="button"><span class="btn-refresh__icon">↻</span> Refresh</button>
       </div>
-      <div class="modal__body">
-        <div class="form-group">
-          <label class="form-label" for="email-to">Recipient Email</label>
-          <input class="form-input" type="email" id="email-to" placeholder="recruiter@company.com">
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="email-subject">Subject</label>
-          <input class="form-input" type="text" id="email-subject" placeholder="Subject line">
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="email-body">Body</label>
-          <textarea class="form-textarea" id="email-body" style="min-height:120px;"></textarea>
-        </div>
-      </div>
-      <div class="modal__actions">
-        <button class="btn-modal-secondary" id="modal-cancel" type="button">Cancel</button>
-        <button class="btn-modal-primary" id="modal-send" type="button">Open in Email Client</button>
+      <div id="dashboard-content">
+        <div class="empty-state"><div class="empty-state__icon">📭</div><p class="empty-state__text">No applications tracked yet.</p></div>
       </div>
     </div>
+  </section>
+
+  <footer class="footer">
+    <p class="footer__main">Built by <strong>Arpita Oberoi</strong> · Powered by Gemini AI + MCP Connectors</p>
+    <p class="footer__sub">ApplyIQ · Notion · Slack · Gmail · Real ATS Engine · Resume Optimizer · LinkedIn Outreach</p>
+  </footer>
+
+</div>
+
+<!-- EMAIL MODAL -->
+<div class="modal-overlay" id="email-modal">
+  <div class="modal">
+    <div class="modal__header">
+      <h3 class="modal__title">📧 Draft Follow-up Email</h3>
+      <button class="modal__close" id="modal-close" type="button">✕</button>
+    </div>
+    <div class="modal__body">
+      <div class="form-group">
+        <label class="form-label" for="email-to">Recipient Email</label>
+        <input class="form-input" type="email" id="email-to" placeholder="recruiter@company.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="email-subject">Subject</label>
+        <input class="form-input" type="text" id="email-subject" placeholder="Subject line">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="email-body">Body</label>
+        <textarea class="form-textarea" id="email-body" style="min-height:120px;"></textarea>
+      </div>
+    </div>
+    <div class="modal__actions">
+      <button class="btn-modal-secondary" id="modal-cancel" type="button">Cancel</button>
+      <button class="btn-modal-primary" id="modal-send" type="button">Open in Email Client</button>
+    </div>
   </div>
+</div>
 
-  <!-- ===== TOAST CONTAINER ===== -->
-  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+<!-- INTERVIEW PREP MODAL -->
+<div class="modal-overlay" id="prep-modal">
+  <div class="modal" style="max-width:780px;max-height:88vh;overflow-y:auto;">
+    <div class="modal__header" style="position:sticky;top:0;background:var(--bg-card);z-index:10;border-bottom:1px solid var(--border-subtle);">
+      <h3 class="modal__title">🎯 Interview Prep Questions</h3>
+      <button class="modal__close" id="prep-close" type="button">✕</button>
+    </div>
+    <div class="modal__body" id="prep-content" style="padding:18px 24px 24px;"></div>
+  </div>
+</div>
 
-  <!-- PDF.js and Mammoth for file parsing -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-  <script>
-    if (typeof pdfjsLib !== 'undefined') {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    }
-  </script>
+<!-- Feature 5: LINKEDIN OUTREACH MODAL -->
+<div class="modal-overlay" id="linkedin-modal">
+  <div class="modal" style="max-width:600px;max-height:88vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
+    <div class="modal__header" style="padding:24px 28px 20px;flex-shrink:0;border-bottom:1px solid var(--border-subtle);position:sticky;top:0;background:#0f0f1a;z-index:10;">
+      <h3 class="modal__title">💼 LinkedIn Outreach Messages</h3>
+      <button class="modal__close" id="linkedin-modal-close" type="button">✕</button>
+    </div>
+    <div class="modal__body" id="linkedin-content" style="padding:20px 28px 28px;overflow-y:auto;flex:1;"></div>
+  </div>
+</div>
 
-  <script src="app.js"></script>
+<!-- RESUME OPTIMIZER MODAL -->
+<div class="modal-overlay" id="optimize-modal">
+  <div class="modal" style="max-width:780px;max-height:90vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
+    <div class="modal__header" style="padding:24px 28px 20px;flex-shrink:0;border-bottom:1px solid var(--border-subtle);background:var(--bg-card);z-index:10;">
+      <h3 class="modal__title">✨ Resume Optimizer</h3>
+      <button class="modal__close" id="optimize-modal-close" type="button">✕</button>
+    </div>
+    <div class="modal__body" id="optimize-content" style="padding:20px 28px 28px;overflow-y:auto;flex:1;"></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script>
+  if (typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+</script>
+<script src="app.js"></script>
 </body>
 </html>
